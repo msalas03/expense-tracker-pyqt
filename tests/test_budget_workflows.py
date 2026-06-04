@@ -287,3 +287,136 @@ def test_delete_income_selected(qtbot, monkeypatch):
     delete_income_selected(win)
 
     assert win.settings.income_items == []
+
+
+def test_budget_with_no_expenses(qtbot):
+    win = MainWindow()
+    qtbot.addWidget(win)
+
+    win.settings.annual_budgets = {"2026": {"food": 500.0}}
+    win.model.rows = []
+    win.model.layoutChanged.emit()
+
+    win.b_year.setCurrentText("2026")
+    win.b_month.setCurrentIndex(win.b_month.findData(1))
+
+    apply_budget_filters(win)
+
+    assert win.model_bva.rows
+    assert win.model_bva.rows[0][1] == 500.0
+    assert win.model_bva.rows[0][2] == 0.0
+
+
+def test_budget_with_no_income(qtbot):
+    win = MainWindow()
+    qtbot.addWidget(win)
+
+    win.settings.income_items = []
+    win.settings.annual_budgets = {"2026": {"food": 500.0}}
+
+    win.b_year.setCurrentText("2026")
+    win.b_month.setCurrentIndex(win.b_month.findData(1))
+
+    apply_budget_filters(win)
+
+    assert win.model_income_combined.rows == []
+
+
+def test_budget_month_with_no_budget_template(qtbot):
+    win = MainWindow()
+    qtbot.addWidget(win)
+
+    win.settings.annual_budgets = {"2026": {}}
+    win.model.rows = [
+        ["25", "food", "groceries", "Milk", "2026-01-10", "Matthew"],
+    ]
+    win.model.layoutChanged.emit()
+
+    win.b_year.setCurrentText("2026")
+    win.b_month.setCurrentIndex(win.b_month.findData(1))
+
+    apply_budget_filters(win)
+
+    assert win.model_bva.rows
+    assert win.model_bva.rows[0][1] == 0.0
+    assert win.model_bva.rows[0][2] == 25.0
+
+
+def test_budget_charts_draw_without_crashing(qtbot):
+    win = MainWindow()
+    qtbot.addWidget(win)
+
+    win.settings.annual_budgets = {"2026": {"food": 500.0}}
+    win.model.rows = [
+        ["125", "food", "groceries", "Milk", "2026-01-10", "Matthew"],
+    ]
+    win.model.layoutChanged.emit()
+
+    win.b_year.setCurrentText("2026")
+    win.b_month.setCurrentIndex(win.b_month.findData(1))
+
+    apply_budget_filters(win)
+
+    win.canvas_bbar.draw()
+    win.canvas_bpie.draw()
+
+    assert win.canvas_bbar is not None
+    assert win.canvas_bpie is not None
+
+
+def test_budget_breakdown_contains_total_row(qtbot):
+    win = MainWindow()
+    qtbot.addWidget(win)
+
+    win.settings.annual_budgets = {
+        "2026": {
+            "food": 500.0,
+            "transport": 200.0,
+        }
+    }
+
+    win.b_year.setCurrentText("2026")
+    win.b_month.setCurrentIndex(win.b_month.findData(1))
+
+    apply_budget_filters(win)
+
+    rows = win.model_bud.rows
+
+    assert rows[-1][0] == win.tr_gui("label_total")
+    assert rows[-1][1] == 700.0
+
+
+def test_invalid_income_month_is_rejected(qtbot, monkeypatch):
+    win = MainWindow()
+    qtbot.addWidget(win)
+
+    win.settings.income_items = []
+
+    win.i_month.setText("January 2026")
+    win.i_employer.setText("Test Employer")
+    win.i_biweekly.setText("1000")
+    win.i_distribs.setCurrentText("2")
+    win.i_other.setText("250")
+
+    called = {"warning": False, "critical": False, "info": False}
+
+    monkeypatch.setattr(
+        QMessageBox,
+        "warning",
+        lambda *args, **kwargs: called.update({"warning": True}),
+    )
+    monkeypatch.setattr(
+        QMessageBox,
+        "critical",
+        lambda *args, **kwargs: called.update({"critical": True}),
+    )
+    monkeypatch.setattr(
+        QMessageBox,
+        "information",
+        lambda *args, **kwargs: called.update({"info": True}),
+    )
+
+    add_income_item(win)
+
+    assert win.settings.income_items == []
+    assert any(called.values())

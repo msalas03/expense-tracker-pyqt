@@ -2,6 +2,48 @@
 
 A tested desktop personal finance app built with Python, PyQt6, CSV persistence, budgeting, reporting, and English/Spanish localization.
 
+Expense Tracker PyQt is a desktop personal finance application focused on maintaining the simplicity of CSV-based storage while providing budgeting, reporting, localization, and automated test coverage.
+
+---
+
+## Project Statistics
+
+- 106 automated tests (pytest + pytest-qt)
+- PyQt6 desktop GUI
+- English / Spanish localization
+- Expense tracking and budgeting
+- Income management
+- Dynamic category taxonomy
+- CSV-based persistence
+- Matplotlib reporting and visualization
+
+---
+
+## Architecture
+
+The application follows a layered design:
+
+- GUI Layer (PyQt6)
+- Services Layer
+- Models Layer
+- Localization Layer
+- CSV Persistence Layer
+- Automated Test Layer
+
+This separation keeps business logic independent from the user interface and improves maintainability and testability.
+
+---
+
+## Technologies
+
+- Python 3.13
+- PyQt6
+- Matplotlib
+- pytest
+- pytest-qt
+- platformdirs
+- CSV persistence
+
 ---
 
 ## Features
@@ -157,11 +199,26 @@ Current coverage includes:
 * Dialog initialization
 * GUI workflows
 
-Current test suite:
+Current test status:
 
-```text
-73 passing tests
-```
+106 / 106 passing
+
+---
+
+## Quality Assurance
+
+The project currently includes:
+
+- 106 automated tests
+- GUI testing with pytest-qt
+- CSV persistence validation
+- Browse workflow testing
+- Reports workflow testing
+- Budget workflow testing
+- Taxonomy management testing
+- Settings persistence testing
+- Localization testing
+- Error-path and recovery testing
 
 ---
 
@@ -173,17 +230,43 @@ expense_tracker/
 ├── gui/
 │   ├── dialogs.py
 │   └── tabs/
+│       ├── browse_tab.py
+│       ├── reports_tab.py
+│       ├── budget_tab.py
+│       └── help_tab.py
 │
 ├── i18n/
 │   └── translations.py
 │
 ├── models/
+│   ├── settings.py
+│   └── table_models.py
 │
 ├── services/
+│   ├── csv_service.py
+│   └── parse_service.py
 │
 ├── tests/
+|   ├── test_browse_workflows.py
+|   ├── test_budget_workflows.py
+|   ├── test_csv_workflows.py
+|   ├── test_gui_core.py
+|   ├── test_reports_workflows.py
+|   └── conftest.py
 │
-└── expense_tracker_gui.py
+├── expense_tracker_gui.py
+├── requirements.txt
+└── pytest.ini
+```
+
+---
+
+## Development
+
+Run tests:
+
+```bash
+python -m pytest -v
 ```
 
 ---
@@ -192,19 +275,39 @@ expense_tracker/
 
 Planned enhancements:
 
-* Additional Manage Categories dialog testing
-* Chart-specific testing
-* Responsive layout testing
-* Enhanced reporting
-* Additional export options
-* Package refactoring
-* Installer generation
+- Additional integration testing
+- Sample data package
+- Dashboard export capabilities
+- Advanced reporting options
+- Packaging and installer improvements
+- Project restructuring into a distributable package
+- Enhanced budgeting analytics
+- Screenshot documentation
+
+---
+
+## Screenshots
+
+Screenshots will be added in a future release.
+
+Planned screenshots:
+
+- Browse Tab
+- Reports Tab
+- Budget Tab
+- Manage Categories Dialog
+
+---
+
+## Sample Data
+
+A sample dataset will be provided in a future release to allow users to explore the application without creating their own expense file.
 
 ---
 
 ## Packaging
 
-Build a standalone executable:
+Build a standalone Windows executable:
 
 ```bash
 pyinstaller --name "Expense Tracker" --onefile --windowed --noconfirm expense_tracker_gui.py
@@ -214,4 +317,10 @@ pyinstaller --name "Expense Tracker" --onefile --windowed --noconfirm expense_tr
 
 ## License
 
-MIT License
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+---
+
+## Disclaimer
+
+This software is intended for educational and personal use. It is not financial, tax, accounting, or investment advice. Users are responsible for validating all financial information and calculations.

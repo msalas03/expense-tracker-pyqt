@@ -1,5 +1,5 @@
 from expense_tracker_gui import MainWindow
-from expense_tracker.services.csv_service import read_rows
+from expense_tracker.services.csv_service import write_rows, read_rows
 
 import csv
 
@@ -243,3 +243,56 @@ def test_parse_amount_invalid_values():
     assert parse_amount("") is None
     assert parse_amount("abc") is None
     assert parse_amount("$abc") is None
+
+
+def test_save_model_without_csv_path_does_nothing(qtbot):
+    win = MainWindow()
+    qtbot.addWidget(win)
+
+    win.settings.expense_file = ""
+    win.model.rows = [
+        ["10", "food", "groceries", "Milk", "2026-01-10", "Matthew"],
+    ]
+
+    win._save_model()
+
+    assert win.model.rows[0][3] == "Milk"
+
+
+def test_reload_missing_csv_does_not_crash(qtbot):
+    win = MainWindow()
+    qtbot.addWidget(win)
+
+    win.settings.expense_file = "missing_file.csv"
+
+    win._reload()
+
+    assert isinstance(win.model.rows, list)
+
+
+def test_write_rows_creates_backup_when_file_exists(tmp_path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+
+    csv_path = data_dir / "expense.csv"
+
+    original_rows = [
+        ["10", "food", "groceries", "Milk", "2026-01-10", "Matthew"],
+    ]
+
+    updated_rows = [
+        ["20", "transport", "fuel", "Gas", "2026-01-11", "Matthew"],
+    ]
+
+    write_rows(str(csv_path), "en", original_rows)
+    write_rows(str(csv_path), "en", updated_rows)
+
+    backup_path = data_dir / "backup" / "expense.csv.bak1"
+
+    assert backup_path.exists()
+
+    # Current file should contain latest rows
+    assert read_rows(str(csv_path)) == updated_rows
+
+    # Backup should contain previous rows
+    assert read_rows(str(backup_path)) == original_rows

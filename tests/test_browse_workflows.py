@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QItemSelectionModel
+from PyQt6.QtCore import QItemSelectionModel, QDate
 from PyQt6.QtWidgets import QMessageBox
 
 from expense_tracker_gui import MainWindow
@@ -438,3 +438,43 @@ def test_totals_popup_shows_filtered_totals(qtbot, monkeypatch):
     assert win.sub_label("groceries") in msg
     assert win.sub_label("restaurants") in msg
     assert win.sub_label("fuel") not in msg
+
+
+def test_quick_add_write_failure_rolls_back_row(qtbot, tmp_path, monkeypatch):
+    win = MainWindow()
+    qtbot.addWidget(win)
+
+    csv_path = tmp_path / "expenses.csv"
+    win.settings.expense_file = str(csv_path)
+
+    win.model.rows = []
+    win.model.layoutChanged.emit()
+
+    food_idx = win.qa_cat.findData("food")
+    assert food_idx >= 0
+    win.qa_cat.setCurrentIndex(food_idx)
+
+    # Refresh subcategories after category selection
+    groceries_idx = win.qa_sub.findData("groceries")
+    assert groceries_idx >= 0
+    win.qa_sub.setCurrentIndex(groceries_idx)
+
+    win.qa_amount.setText("12.50")
+    win.qa_desc.setText("Rollback Test")
+    win.qa_name.setText("Matthew")
+    win.qa_date.setDate(QDate(2026, 1, 10))
+
+    monkeypatch.setattr(
+        "expense_tracker_gui.write_rows",
+        lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("forced write failure")),
+    )
+
+    monkeypatch.setattr(
+        QMessageBox,
+        "critical",
+        lambda *args, **kwargs: None,
+    )
+
+    win._quick_add()
+
+    assert win.model.rows == []
